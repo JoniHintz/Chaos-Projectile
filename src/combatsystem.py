@@ -109,12 +109,7 @@ class CombatSystem():
                                             stun_ev = events.EntityStunned(collider_ID, attack.stun)
                                             self.event_manager.post(stun_ev)
                                         else:
-                                            #Remove all projectiles of enemy
-                                            for attack in self.world.attacks[collider_ID]:
-                                                for projectile in attack.particles:
-                                                    projectile.life = -1
-                                                    ev_die = events.EntityDies(projectile.entity_ID)
-                                                    self.event_manager.post(ev_die)
+                                            self.remove_enemy_projectiles(collider_ID)
                                             #Enemy dies
                                             ev_die = events.EntityDies(collider_ID)
                                             self.event_manager.post(ev_die)
@@ -137,16 +132,22 @@ class CombatSystem():
         for entity_ID in self.world.to_remove:
             #make sure no ownerless projectile stays on the screen
             if entity_ID in self.world.attacks:
-                for attack in self.world.attacks[entity_ID]:
-                    for projectile in attack.particles:
-                        projectile.life = -1
-                        ev_die = events.EntityDies(projectile.entity_ID)
-                        self.event_manager.post(ev_die)
+                self.remove_enemy_projectiles(entity_ID)
             self.world.destroy_entity(entity_ID)
             if entity_ID == self.world.player:
                 self.reset_the_world = True
         self.world.to_remove = list()
+        
+    def remove_enemy_projectiles(self, enemy_ID):
+        for attack in self.world.attacks[enemy_ID]:
+                    for projectile in attack.particles:
+                        projectile.life = -1
+                        ev_die = events.EntityDies(projectile.entity_ID)
+                        self.event_manager.post(ev_die)
 
+        
+
+    
     def execute_attack(self, entity_ID, attack_Nr, spawn_attack_pos=None, attack_dir=None):
         """Entity executes one of its possible attacks if cooldown is ready.
 
